@@ -1,0 +1,43 @@
+# POC1
+# Here we created the kubernetes basic pod with postgres container
+# To access the pod directly from host system or another system you need to forward the pod port to host port
+# kubectl port-forward pd-pod-name 8888:5432 ie HOSTPOST:POD_CONTAINER_PORT
+# Equivalent Docker command : docker container run -itd -p 8888:5432--name db-pod-con-name -e POSTGRES_DB=postgresdb -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=password postgres:12
+
+
+
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pd-pod-name # POD NAME
+  labels:
+    app: pd-label # POD LABEL FROM WHICH POD WILL BE RECOGNISED OR SELECTED BY OTHER SERVICES
+spec:
+
+  containers:
+    - name: db-pod-con-name # CONTAINER NAME
+      image: 'postgres:12'
+      envFrom:
+      - secretRef:
+          name: db-secrete
+      ports:
+        - containerPort: 5432
+
+      resources:
+        limits:
+          cpu: "0.5"  # Maximum CPU limit (0.5 cores)
+          memory: "1Gi"  # Maximum memory limit (1 gigabyte)
+        requests:
+          cpu: "0.2"  # Initial CPU request (0.2 cores)
+          memory: "512Mi"  # Initial memory request (512 megabytes)
+
+  #     volumeMounts:
+  #       - name: psql-persistent-volume
+  #         mountPath: /var/lib/postgresql/data
+
+  # volumes:
+  #   - name: psql-persistent-volume
+  #     persistentVolumeClaim:
+  #       claimName: psqlpvc

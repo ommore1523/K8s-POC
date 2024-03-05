@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app-dep
+  labels:
+    app: web-app-dep
+    type: front-end-dep
+spec:
+  template:
+    metadata:
+      name: web-app-pod
+      labels:
+        app: web-app-pod
+        type: front-end-pod
+    spec:
+      containers:
+        - name: web-app-nginx
+          image: ommore/k8spocapp
+          ports:
+            - containerPort: 5000
+  selector:
+    matchLabels:
+      type: front-end-pod
+  replicas: 2

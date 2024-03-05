@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: psqlpvc
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce # accessmode should match
+  resources:
+    requests:
+      storage: 2Gi

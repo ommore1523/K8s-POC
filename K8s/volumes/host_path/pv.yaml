@@ -1,0 +1,22 @@
+# pv.yaml
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: psqlpv
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  #1.  Recycle  delete hostpath    
+  #2.  Delete (for deleteing external disk like ebs) 
+  #3.  Retain (keep)
+  # persistentVolumeReclaimPolicy: Recycle  #1   
+  persistentVolumeReclaimPolicy: Delete   #2
+  # persistentVolumeReclaimPolicy: Retain   #3
+  hostPath:
+    path: "/home/docker/psqlVolume"

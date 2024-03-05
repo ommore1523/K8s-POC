@@ -1,0 +1,124 @@
+# RBAC Steps
+
+1. Create User Shivam
+```bash
+openssl genrsa -out shivam.key 2048
+openssl req -new -key shivam.key -subj "/CN=shivam/O=system:nodes" -out shivam.csr # user is used in role-binding as group
+sudo cp /etc/kubernetes/pki/ca.crt .
+sudo cp /etc/kubernetes/pki/ca.key .
+sudo chmod -R 777 ca*
+openssl x509 -req -in shivam.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out shivam.crt -days 365
+
+cp ~/.kube/config  shivam.kubeconfig
+```
+
+```bash
+# shivam.kubeconfig file 
+
+# certificate-authority-data: cat /etc/kubernetes/pki/ca.crt | base64
+# client-certificate-data: cat shivam.crt | base64
+# client-key-data: cat shivam.key | base64
+
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURCVENDQWUyZ0F3SUJBZ0lJWnhRdEVyd1ovRGN3RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TXpBNU1qWXdOVFExTlRaYUZ3MHpNekE1TWpNd05UVXdOVFphTUJVeApFekFSQmdOVkJBTVRDbXQxWW1WeWJtVjBaWE13Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLCkFvSUJBUUMrR0xyWlFPaUQxOUg2WGRXc1J6blB2cmFULzU0MnR1dEdmNnRTRlFVd2RCeWtBbFdhcWsybDdQOVoKM05nR01iSkVEZkUvWXdNZWxYM2dwRXFOTzJkZThHc2hiaFZQYjNzWU9pUFBOUVNmZmJYTElEZmdiQ08rREV3bwp2UHc2WWQzZ0d0NEZRMzBiOWlPUFVONXRxWTU2R0l2QnlpVlRkdnRZUnQzSUZ2QWlGUEpzREpPdndYUUhjSEZTClNMZVMzVThLK0pOaWp5bWF5OEFDME1CVEZLYWZTaWw4Uit5a08vYkFqMS9NRFErQzFmS3BnR1NiWUxuQ0pzQU0KOEYvbzFJMUZqeldWeDFxS2pFRVVKQW5Objk0TVM3bHhMR1Z6L3pKdzZYcEJybmh5YmhsQ2pQb005ZW1VUXlNQQowL2FHNk83TzlrZEpLUlNZV3hYRldIUzl5SU1GQWdNQkFBR2pXVEJYTUE0R0ExVWREd0VCL3dRRUF3SUNwREFQCkJnTlZIUk1CQWY4RUJUQURBUUgvTUIwR0ExVWREZ1FXQkJRU3RKeFF5UWE5ZmxIYTlJUVFVaDR6b1E0V2JqQVYKQmdOVkhSRUVEakFNZ2dwcmRXSmxjbTVsZEdWek1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQlNwTVdTV0kvbwpjRFhvS1ZzSmZGdEhTd3diYktsY2ZSbDJOMnN1ZENzNUdSMml6L3hvZmZWRWRNSHhkOWxWMjZPVnFPY3owaVlMCmllaDlQdzRtNXFRdXFJM0ZkcFpZbUI2d3VXcFpzYkptMWw1WjhRN0JWYlNvSU5wTVVZSFBXRHdNemVLWEhOL2MKUU96ZUtsMGxQaGdiRGE2QTlNWVFMajJGZlk1eE8vTHRWK0VXVlNIWmV6d2xETWh6c2oxS1puKzhROWdISVJRRQpKQVoxNzFCbzVBZW81Wjh1RG9wdGVJWlZxSmpWUW5JakdkaVo5YXhNYjJDbGtpYTB6MGlONzZtd1RHRHFPcGJmCkxpNzlDampkTCtFcEJXNTZ5ZHpja1g1Nmh6SjkvaDZjYjVTaTBjQ3E3aFd0MThlWFRDYmxjMjJaQ2tNUzdPeU0KMzZ6b3dDUDk0TlV0Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+    server: https://172.31.13.245:6443
+  name: kubernetes
+contexts:
+- context:
+    cluster: kubernetes
+    user: shivam
+  name: shivam-context
+current-context: shivam-context
+kind: Config
+preferences: {}
+users:
+- name: kubernetes-admin
+  user:
+    client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUN4RENDQWF3Q0ZILysyYksrQU1BR1J4UWJ2ckpYakozVEpjd3JNQTBHQ1NxR1NJYjNEUUVCQ3dVQU1CVXgKRXpBUkJnTlZCQU1UQ210MVltVnlibVYwWlhNd0hoY05Nak13T1RJNE1URXhOVE13V2hjTk1qUXdPVEkzTVRFeApOVE13V2pBb01ROHdEUVlEVlFRRERBWnphR2wyWVcweEZUQVRCZ05WQkFvTURITjVjM1JsYlRwdWIyUmxjekNDCkFTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBTHA0TDB1Z2o5blk1cWlQSTIrdm0zbGsKazVyS1BjL0lCQjRwaEZCazFucFNIS1dXakluelpXWUxvZkhLWXpUdkFoTURPa0JldWhoQUg1Zkp1bUI4SjQrSQpqaG9UeHpsbGtyNHJ1a2Q1RUtmc0p2eXdCVklnc2FrTE5KS0RoVkxxVnZaR3h6cWhjeG1BYWVIMlhvdjlZdjl4CjBzWlVHaXBXb1pTdElPVHZRcTZxZlA2MkpRR3NlZktvZDNYK3pwZEhKbjBNUUl2cGRncGt6WVk1UjlwS1U5Uk8KVXhOZjVHS1JaVUgxMW53SWEySkpHRGNaSEJJc2hiNDJ0WVhmQyt4ZEpQbFZEUXdDTUhGY2M4WGsxWlRDK3dIRApML2ZGT2QxRlpkTVNWNklsTmNpRzdKVDNLRWVaLzFlQWk1VkIxMFpldWVlbGN3MEtaZS9TbXNkeXJPajQvMUVDCkF3RUFBVEFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBR2NlRXpRSTZLUXQwM1lXWk9Na0dnRmpzYVh3aEN3NGQKSExpc0VQTTQxeElQM2JFaUlpdHpsZE1IVmhmeHRMdFBWbGEzajlrZjlrenUzY2VrMHd6T0dLR1BUdEIzZTdPMApjUm4xRG96Y3cyUzhwYkFzSFl0eEdheWxTWGlGMFNTcVc1MzdUSVc2bzZtcjY1Q0xWaVZRVCtxWnZGMkZkN1o5CjhFVWlLOGxweHYzaUFHNlJqVEsrcTVGTHVqTjVNTklMSVBxODF2UlBsRWpXOURvM3lqRHJiZ0ZTNnlUM1NjTlYKaWFYMlJOWEt6c1BHQ3V0MUtrU3NPWHpqbEtsOFN4TjNvUkZBWHpVMy9XREF5N3Z6NFNRRWE1UUFzcUVvU1B6UQo0MytZWE5sT3d0Tkk3WVEyclRFSDRsSHE2bnhITXQvTVJQSDk1TCtXdXdWUEhVLzA0Nll6NWc9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+    client-key-data: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcEFJQkFBS0NBUUVBdW5ndlM2Q1AyZGptcUk4amI2K2JlV1NUbXNvOXo4Z0VIaW1FVUdUV2VsSWNwWmFNCmlmTmxaZ3VoOGNwak5POENFd002UUY2NkdFQWZsOG02WUh3bmo0aU9HaFBIT1dXU3ZpdTZSM2tRcCt3bS9MQUYKVWlDeHFRczBrb09GVXVwVzlrYkhPcUZ6R1lCcDRmWmVpLzFpLzNIU3hsUWFLbGFobEswZzVPOUNycXA4L3JZbApBYXg1OHFoM2RmN09sMGNtZlF4QWkrbDJDbVROaGpsSDJrcFQxRTVURTEva1lwRmxRZlhXZkFocllra1lOeGtjCkVpeUZ2amExaGQ4TDdGMGsrVlVOREFJd2NWeHp4ZVRWbE1MN0FjTXY5OFU1M1VWbDB4SlhvaVUxeUlic2xQY28KUjVuL1Y0Q0xsVUhYUmw2NTU2VnpEUXBsNzlLYXgzS3M2UGovVVFJREFRQUJBb0lCQUEvN1Z3cGpVNUQzVHlXcApSdjgrak5QRnRBVHpTb0x4Z0xEWkhCY0wzWG9VYVpJanFoMzB0MzhjaGgvRUdlYWlpWW41bjlkK2h2S25KRTROCkl5VTczdVFsYnhCN0czc200b0hjRzVZZW9UZlRQTEF4b2ZNZEREMFIwY3F3N1E5ak9GclpUQ0FSVUYwaUxYRUoKZmFiLzY2azdKemFLWk1lMkx4a2dFWTZ0bHdpRFBNbDR0SEVkYll0NEkvc1NwcFFrdnNPYkI5c3FMMG55K3F4VQpvN3dPT2dpUG16OEt0a3lOWUM5MlF0RmpTdnMwZko0eTNQL3RsSWNMbkcrK2FjS1FOZ2haNGtRa3VxSmhxZk5VCldzQk4vQlJrSkU2dmNDZkFGV2ZESVFkdDZScUdCdG1UYklnSml0Z1RsMHlqT3FsdUlEOTJ2cVFVZThtangrTmcKNWlSa3RtVUNnWUVBMjFRSFo4VmhNQVdpWS80amlPWklxcGZoV1ZDd0dJTVhNODF1M2RoWmM0Sit2bUx0Mks5NgpmUWh2ZHp6L1U3b3c3azgxUTFHZnJIRUtodUZ6bDhGaythbk95Z2RnWmZ5RTFNUjdvWm05cWpVK3B5ak9SZzNUCnFLVFg3Y2FqcFRxNTF1TGVseWVuYkNGd0czWHgreU9YZTVORHVyRFdzNm5zVkJyTDFER3V0TjhDZ1lFQTJhV3gKUC9TYjdaZitUc0MwSTIxN09zQk9WeHlCQ1IybFdmSnVFd1JiczhHSXJHZWQ5eUg5bERDcHJqN05kbGM0cXRxKwpBbmF3MVVNanVvdFFjeXFQZit0bDMrOU5mRW5sYWwyWTN5M2xRaHMzbmJDckUyTEh4M3plTFdYMzhsY08rSFE4CnFIdjJSYWlIOTIxRXJoNmorMzBKS1U0b3JFd0d2MlhXSVhFY0ljOENnWUVBczhmMUtnS0kzNncrcUdneENJNTcKRWhyZEJURTJwMkVOSzlGQkIyZklLdjdVbFlyU0c4UDdTM0lXckU2N25BNEsvY3kvaENic0U1VzFZMHA2VGZLZwpxbVdlczh2SUlORVVzTE0rQkFEWmp5T0Y3ODlyQmRGZnBlVTVlaFpSSGFjOW5mN3BKazNDMXNleDlWQ0F3Yk16CkFJQitEQkhZYS96bFV5dUQyTFBBMlZFQ2dZRUFyV2lPcU41RHZqSHp0TnRrcXpWM2tYL1c2eUVTemlpSXJmbXkKS2dTMjY2bXZNMjM3TmdRbS9nTW5ybVRyWHZadmQvR0Fvb1hlcm93bjAyRmNYK1h4SDRKMlVNMWhkejJKUkEzKwoxeExDTHNGd3Ruc2tVdlhKSnZBZU5SMmhSN3lGZVA5anRQblBaZ0M1RkRKREhsZmJYMnhuK0RrRnZ3RnovdHNzCm1NaCtHWkVDZ1lBMmdlUk9CTGVQSHdZWlk1SzdkMlNwdVhkZXQybVh4WE9pcVRtQmVBQ1JUV2lOYkhScnZvOC8KYytMUWJ4ZEh4YnBkdVA1QkVNL3FsNkV4allNNkZEclMvSWswbFpWdGc5TkdCMS9JeWdlRnlaTU9UQVpweFZaVAo1ZHV2dTV1TUVLaUxuNEtlanJtRXdMWEZOVEhUU3lTN3NPa3BwZUppRTJWc3NwOUNpaktjdGc9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+
+```
+
+- Send this kubeconfig file to user
+
+- User will add this file with name .kube /config
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: shivam-pod
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+```
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: shivam-role-binding
+  # namespace: development # default= default
+subjects:
+- kind: User
+  name: shivam # Name is case sensitive
+  apiGroup: rbac.authorization.k8s.io
+
+# subjects:
+# - kind: Group
+#   name: system:nodes # Name is case sensitive
+#   apiGroup: rbac.authorization.k8s.io
+
+roleRef:
+  kind: Role
+  name: shivam-pod
+  apiGroup: rbac.authorization.k8s.io
+
+```
+
+```bash
+ubuntu@admin:~/k8s$ kubectl auth can-i list pods --as shivam
+yes
+
+ubuntu@admin:~/k8s$ kubectl auth can-i list deployment --as shivam
+no
+```
+
+## POC: Clusrer role [permissions accross namespaces]
+
+```yaml
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  # "namespace" omitted since ClusterRoles are not namespaced
+  name: cluster-role-name
+rules:
+
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["list"]
+```
+
+
+
+```yaml
+
+apiVersion: rbac.authorization.k8s.io/v1
+# This cluster role binding allows anyone in the "manager" group to read secrets in any namespace.
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-role-binding-name
+subjects:
+- kind: User
+  name: shivam # Name is case sensitive
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: cluster-role-name  # role name
+  apiGroup: rbac.authorization.k8s.io
+```
