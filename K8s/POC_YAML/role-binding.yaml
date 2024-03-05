@@ -1,0 +1,19 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: shivam-role-binding
+  # namespace: development # default= default
+# subjects:
+# - kind: User
+#   name: shivam # Name is case sensitive
+#   apiGroup: rbac.authorization.k8s.io
+
+subjects:
+- kind: Group
+  name: system:nodes # Name is case sensitive
+  apiGroup: rbac.authorization.k8s.io
+
+roleRef:
+  kind: Role
+  name: shivam-pod
+  apiGroup: rbac.authorization.k8s.io

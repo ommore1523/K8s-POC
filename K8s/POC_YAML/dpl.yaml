@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-dep
+  labels:
+    app: db-dep
+    type: db
+spec:
+  template:
+    metadata:
+      name: db-pod
+      labels:
+        app: db-pod
+        type: db-type-pod
+
+    spec:
+      containers:
+        - name: web-db
+          image: postgres:12
+
+          # envFrom:
+          #   - configMapRef:
+          #       name: postgres-config
+          # envFrom:
+          # - secretRef:
+          #     name: db-secrete
+
+          env:
+            - name: POSTGRES_DB
+              value: postgresdb
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: postgres
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+
+          ports:
+            - containerPort: 5432
+
+          # readinessProbe: # remove the pod if not healty
+          #   exec:
+          #     command:
+          #     - cat
+          #     - /var/lib/postgresql/data/pgdata/om.txt
+          #   initialDelaySeconds: 10
+          #   timeoutSeconds: 10
+
+          # livenessProbe: # retry and redeploy  the container if not healty
+          #   exec:
+          #     command:
+          #     - cat
+          #     - /var/lib/postgresql/data/pgdata/om.txt
+          #   initialDelaySeconds: 10
+          #   timeoutSeconds: 10
+
+          # startupProbe: # It will check at starting level.. ONce container add to healthy and after app crashes it will not care
+          #   exec:
+          #     command:
+          #       - cat
+          #       - /var/lib/postgresql/data/pgdata/om.txt
+          #   failureThreshold: 10
+          #   periodSeconds: 5
+
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+
+          volumeMounts:
+            - name: psql-persistent-volume
+              mountPath: /var/lib/postgresql/data
+
+      # NOTE: Node will only accept toleration matching pods
+      # tolerations:  
+      # - key: "app" 
+      #   operator: "Equal"
+      #   value: "db"
+      #   effect: "NoSchedule"
+
+
+      # NOTE: Pods will execute on label macthing nodes.
+      # nodeSelector:
+      #   app: db
+
+
+      # affinity:
+      #   nodeAffinity:
+      #     requiredDuringSchedulingIgnoredDuringExecution:
+      #       nodeSelectorTerms:
+      #       - matchExpressions:
+      #         - key: app
+      #           operator: In
+      #           values:
+      #           - db
+
+      volumes:
+        - name: psql-persistent-volume
+          persistentVolumeClaim:
+            claimName: psqlpvc
+
+  strategy:
+    # 1. Recreate
+    # type: Recreate
+
+    # 2. rolling update
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  selector:
+    matchLabels:
+      type: db-type-pod # pod label matching
+  # replicas: 4
